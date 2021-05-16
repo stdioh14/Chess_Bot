@@ -255,27 +255,16 @@ int center_position(int index, bool endgame, bool king) {
 	return return_score;
 }
 
-int bishop_eval() {
-	int score = 0;
-	return score;
-}
+int evaluate(ChessBoard chess, int player, int nr_pawn_moves,int nr_rook_moves,
+		int nr_bishop_moves, int nr_queen_moves) {
 
-int rook_eval() {
-	int score = 0;
-	return score;
-}
-
-int king_eval() {
-	int score = 0;
-	return score;
-}
-
-int evaluate(ChessBoard chess, int player) {
 	BitBoard my_board;
 	Legal_Moves legal;
-	int score = 0, bishop_count = 0;
+	int score = 0, bishop_count = 0, rook_count = 0, x, y;
 	string color, opponent;
 	unsigned long long position;
+
+	vector<pair<int, int>> rook_index;
 
 	if (player == 1) {
 		my_board = chess.white_board;
@@ -306,13 +295,22 @@ int evaluate(ChessBoard chess, int player) {
 			if ((position & chess.white_pawns.current_form) != 0) {
 				score += WHITE_PAWN_EVAL[i];
 				score += pawn_eval(chess, color, position);
+				string current_pos = legal.bits_to_position_string(position);
+				if(current_pos.at(1) > '3'){
+					score += (current_pos.at(1) - '3')*10;
+				}
+				if(nr_pawn_moves == 0){
+					score -= 30;
+				}
 				score += P;
 			} else if ((position & chess.white_rooks.current_form) != 0) {
 				score += WHITE_ROOK_EVAL[i];
 				score += R;
-				string current_pos = legal.bits_to_position_string(position);
-				Piece my_rook = legal.rooks_moves(current_pos, color, chess);
-				score += (2 * my_rook.number_of_moves);
+				score += (2 * nr_rook_moves);
+				rook_count++;
+				x = i / 8; 
+				y = i % 8;
+				rook_index.push_back({x, y});
 			} else if ((position & chess.white_knights.current_form) != 0) {
 				// caii sunt mai putini valorosi la finalul jocului
 				score += WHITE_KNIGHT_EVAL[i];
@@ -330,13 +328,13 @@ int evaluate(ChessBoard chess, int player) {
 				if (chess.endgame == true) {
 					score += 10;
 				}
-				string current_pos = legal.bits_to_position_string(position);
-				Piece my_bishop = legal.bishop_moves(current_pos, color, chess);
-				score += (2 * my_bishop.number_of_moves);
+				score += (2 * nr_bishop_moves);
 				score += B;
 			} else if ((position & chess.white_queen.current_form) != 0) {
 				score += WHITE_QUEEN_EVAL[i];
 				score += Q;
+				score += (nr_queen_moves*5);
+
 				if (chess.opening == true && chess.white_board.queen_moved == true) {
 					score -= 100;
 				}
@@ -367,13 +365,22 @@ int evaluate(ChessBoard chess, int player) {
 			if ((position & chess.black_pawns.current_form) != 0) {
 				score += BLACK_PAWN_EVAL[i];
 				score += pawn_eval(chess, color, position);
+				string current_pos = legal.bits_to_position_string(position);
+				if(current_pos.at(1) > '4'){
+					score += ('4' - current_pos.at(1))*10;
+				}
+				if(nr_pawn_moves == 0){
+					score -= 30;
+				}
 				score += P;
 			} else if ((position & chess.black_rooks.current_form) != 0) {
 				score += BLACK_ROOK_EVAL[i];
 				score += R;
-				string current_pos = legal.bits_to_position_string(position);
-				Piece my_rook = legal.rooks_moves(current_pos, color, chess);
-				score += (2 * my_rook.number_of_moves);
+				score += (2 * nr_rook_moves);
+				rook_count++;
+				x = i / 8; 
+				y = i % 8;
+				rook_index.push_back({x, y});
 			} else if ((position & chess.black_knights.current_form) != 0) {
 				score += BLACK_KNIGHT_EVAL[i];
 				if (chess.endgame == true) {
@@ -391,13 +398,13 @@ int evaluate(ChessBoard chess, int player) {
 				if (chess.endgame == true) {
 					score += 10;
 				}
-				string current_pos = legal.bits_to_position_string(position);
-				Piece my_bishop = legal.bishop_moves(current_pos, color, chess);
-				score += (2 * my_bishop.number_of_moves);
+				score += (2 * nr_bishop_moves);
 				score += B;
 			} else if ((position & chess.black_queen.current_form) != 0) {
 				score += BLACK_QUEEN_EVAL[i];
 				score += Q;
+				score += (nr_queen_moves*5);
+
 				if (chess.opening == true && chess.black_board.queen_moved == true) {
 					score -= 100;
 				}
@@ -412,12 +419,78 @@ int evaluate(ChessBoard chess, int player) {
 			}
 		}
 	}
-	if(nr_queens >1){
+
+	if(nr_queens > 1){
 		score += nr_queens * 40;
+	}
+
+	int x1, x2, y1, y2;
+	bool connected = true;
+	unsigned long long aux;
+	if (rook_count == 2) {
+		x1 = rook_index[0].first; y1 = rook_index[0].second;
+		x2 = rook_index[1].first; y2 = rook_index[1].second;
+		if (x1 == x2) {
+			// ture pe aceeasi linie
+			score += 5;
+			position = 1 << (8 * x1);
+			aux = position;
+			if (y1 < y2) {
+				for (int i = y1 + 1; i < y2; i++) {
+					position = aux << i;
+					if ((position & chess.board.current_form) != 0) {
+						connected = false;
+						break;
+					}
+				}
+			} else if (y2 < y1) {
+				for (int i = y2 + 1; i < y1; i++) {
+					position = position << i;
+					if ((position & chess.board.current_form) != 0) {
+						connected = false;
+						break;
+					}
+				}
+			}
+
+			if (connected == true) {
+				score += 35;
+			}
+		} else if (y1 == y2) {
+			// ture pe aceeasi coloana
+			score += 5;
+
+			position = (1 << y1);
+			if (x1 < x2) {
+				for (int i = x1 + 1; i < x2; i++) {
+					position = position << 8;
+					if ((position & chess.board.current_form) != 0) {
+						connected = false;
+						break;
+					}
+				}
+			} else if (x2 < x1) {
+				for (int i = x2 + 1; i < x1; i++) {
+					position = position << 8;
+					if ((position & chess.board.current_form) != 0) {
+						connected = false;
+						break;
+					}
+				}
+			}
+
+			if (connected == true) {
+				score += 35;
+			}
+		}
 	}
 	return score;
 }
 
-int evaluateBoardScore(ChessBoard chess, int player) {
-	return evaluate(chess, player) - evaluate(chess, -player);
+int evaluateBoardScore(ChessBoard chess, int player, int nr_pawn_moves,
+	int nr_rook_moves, int nr_bishop_moves, int nr_queen_moves) {
+	return evaluate(chess, player, nr_pawn_moves,
+		nr_rook_moves,nr_bishop_moves,nr_queen_moves) - 
+			evaluate(chess, -player, nr_pawn_moves,
+		nr_rook_moves,nr_bishop_moves, nr_queen_moves);
 }

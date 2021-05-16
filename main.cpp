@@ -12,9 +12,8 @@
 #include "Minimax.h"
 #include "Transposition.h"
 using namespace std;
+
 #define STR_BUFF 256
-
-
 
 HashTable tt;
 
@@ -174,7 +173,6 @@ int main (int argc, const char *argv[])
 
 		else if( (chess.board.force_mode == false) && ((check_regular_input(input) == true) ||
 				(check_pawn_p_input(input) == true)) ) {
-			//moves_functions.xboard_move(input, chess);
 			apply_move(chess, input, color_on_move);
 
 			if(chess.board.engine_color == "black") {
@@ -192,7 +190,6 @@ int main (int argc, const char *argv[])
 			}
 
 			string res;
-
 			for (int i = 2; i <= 6; i++) {
 				res = alfabeta_root(chess, player, i);
 			}

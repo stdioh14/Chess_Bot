@@ -168,7 +168,7 @@ const int WHITE_KING_ENDGAME[64] = {
 // Evaluation functions
 int pawn_eval(ChessBoard, string, unsigned long long);
 int table_value(ChessBoard, int);
-int evaluate(ChessBoard, int);
-int evaluateBoardScore(ChessBoard, int);
+int evaluate(ChessBoard, int,int,int,int,int);
+int evaluateBoardScore(ChessBoard, int,int,int,int, int);
 
 #endif

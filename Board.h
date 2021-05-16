@@ -16,6 +16,8 @@ typedef struct {
     bool first_move_rook2 = true;
     bool castled = false;
     bool queen_moved = false;
+    unsigned char attacked = 0;
+    unsigned char defended = 0;
 } BitBoard;
 
 typedef struct chess {

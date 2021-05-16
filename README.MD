@@ -497,3 +497,47 @@ RESPONSABILITATI
 		- Quiescence Search
 		- documentatie
 		- debugging
+
+	Etapa a 3-a
+
+	Dumitrescu Georgiana:
+
+		- passed pawn -> un pion care nu mai poate fi atacat de pionii
+						oponentului pentru restul jocului, este mai valoros
+		- queen mobility -> regina este cu atat mai valoroasa cu cat are mai
+						multe optiuni de mutari
+		- pawns mobility -> pionii sunt cu atat mai valorosi cu cat au mai
+						multe optiuni de mutari
+		- bishops mobility -> nebunii sunt cu atat mai valorosi cu cat au mai
+						multe optiuni de mutari
+		- debugging
+
+	Manescu Emilian:
+
+		- sortarea capturilor : good captures, even captures, bad captures
+
+		- double pawns
+		
+		- joined rooks -> 2 ture aflate pe aceeasi linie/coloana sunt mai
+						valoroase
+
+		- modificari in functia de evaluare si calculare a scorului (+ 
+			functii anexe)
+
+		- debugging
+
+		- documentatie
+
+	Belbu Alexandru:
+
+		- transposition tables (Implementarile functiilor din fisierul
+								Transpositions)
+		- attacked & defended values (Calcularea pieselor care ataca
+						si a pieselor care apara o anumita pozitie)
+
+		- modificari in functia de evaluare si calculare a scorului (+ 
+			functii anexe)
+			
+		- debugging
+
+		- documentatie

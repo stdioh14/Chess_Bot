@@ -6,6 +6,13 @@
 #include "Board.h"
 using namespace std;
 
+#define PAWNS 6
+#define KNIGHTS 3
+#define BISHOPS 3
+#define ROOKS 2
+#define QUEENS 1
+#define KINGS 1
+
 unsigned int countSetBits(unsigned long long n) { 
 	unsigned int count = 0; 
 	while (n) { 
@@ -301,9 +308,12 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 	int index = index_bit(position);
 	int j;
 
+
 	if(color == "white") {
 		j = 0;
 		pawn.number_of_moves = 0;
+		chess.white_pawns.defended = 0;
+		chess.white_pawns.attacked = 0;
 		if(first_move == true) {
 
 			//Pionul are voie sa se mute 2 pozitii in fata
@@ -316,7 +326,7 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 				pawn.possible_moves[j] = bits_to_position_string(position << (8 * 2));
 				pawn.number_of_moves++;
 				j++;
-			}
+			}else if((chess.white_board.current_form & (position << 8)))chess.white_pawns.defended += PAWNS; 
 		}
 		//Pionul se muta o singura pozitie in fata
 		if(index < 56 && ((chess.black_board.current_form & (position << 8)) == 0) &&
@@ -325,7 +335,7 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 			pawn.possible_moves[j] = bits_to_position_string(position << 8);
 			pawn.number_of_moves++;
 			j++;
-		}
+		} else if((chess.white_board.current_form & (position << 8))) chess.white_pawns.defended += PAWNS;
 		
 		//Mutari de atac
 
@@ -334,7 +344,7 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 		if((index % 8 != 0) && index < 56 && 
 			(((chess.black_board.current_form & (position << 7)) != 0) || 
 			(((position << 7) & chess.black_board.en_passant) != 0))) {
-
+			chess.white_pawns.attacked+= PAWNS;
 			pawn.possible_moves[j] = bits_to_position_string(position << 7);
 			pawn.number_of_moves++;
 			j++;
@@ -347,6 +357,7 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 		if(((index + 1) % 8 != 0) && index < 56 
 			&& (((chess.black_board.current_form & (position << 9)) != 0) ||
 				(((position << 9) & chess.black_board.en_passant) != 0))) {
+			chess.white_pawns.attacked += PAWNS;
 			pawn.possible_moves[j] = bits_to_position_string(position << 9);
 			pawn.number_of_moves++;
 			j++;
@@ -355,6 +366,8 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 	else {
 		j = 0 ;
 		pawn.number_of_moves = 0 ;
+		chess.black_pawns.defended = 0;
+		chess.black_pawns.attacked = 0;
 		if(first_move == true){
 
 			if(index > 15 && ((chess.black_board.current_form & (position >> 8)) == 0) && 
@@ -367,7 +380,7 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 				pawn.possible_moves[j] = bits_to_position_string(position >> (8*2));
 				pawn.number_of_moves++;
 				j++;
-			}
+			} else if((chess.black_board.current_form & (position >> 8))) chess.black_pawns.defended += PAWNS;
 		}
 
 		if(index > 7 && ((chess.black_board.current_form & (position >> 8)) == 0) && 
@@ -378,7 +391,7 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 			pawn.possible_moves[j] = bits_to_position_string(position >> 8);
 			pawn.number_of_moves++;
 			j++;
-		}
+		} else if((chess.black_board.current_form & (position >> 8))) chess.black_pawns.defended += PAWNS;
 
 		//Mutari de atac
 
@@ -387,7 +400,7 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 		if(((index + 1) % 8 != 0) && index > 7 && 
 			(((chess.white_board.current_form & (position >> 7)) != 0) ||
 			(((position >> 7) & chess.white_board.en_passant) != 0 ))) {
-			
+			chess.black_pawns.attacked += PAWNS;
 			pawn.possible_moves[j] = bits_to_position_string(position >> 7);
 			pawn.number_of_moves++;
 			j++;
@@ -399,6 +412,7 @@ Piece Legal_Moves :: pawn_moves(bool first_move, string pos, string color, Chess
 		if((index % 8 != 0) && index > 7 && 
 			(((chess.white_board.current_form & (position >> 9)) != 0) ||
 				(((position >> 9) & chess.white_board.en_passant) != 0))) {
+			chess.black_pawns.attacked +=PAWNS;
 			pawn.possible_moves[j] = bits_to_position_string(position >> 9);
 			pawn.number_of_moves++;
 			j++;
@@ -412,14 +426,20 @@ Piece Legal_Moves :: rooks_moves(string pos, string color, ChessBoard &chess){
  
  	Piece rook;
  	BitBoard opposite_board, my_board;
+ 	BitBoard *my_rooks; 
 	if(color == "white"){
 		opposite_board = chess.black_board;
 		my_board = chess.white_board;
+		my_rooks = &(chess.white_rooks);
 	}
 	else{
 		opposite_board = chess.white_board;
 		my_board = chess.black_board;
+		my_rooks = &(chess.black_rooks);
 	}
+
+	my_rooks -> attacked = 0;
+	my_rooks -> defended = 0;
 
 	rook.number_of_moves = 0 ; //mutari posibile din pozitia curenta
 	unsigned long long position = pos_to_64bits(pos);
@@ -433,6 +453,8 @@ Piece Legal_Moves :: rooks_moves(string pos, string color, ChessBoard &chess){
 	rook.number_of_moves = 0 ;
 
 	crossed_pieces = 0;
+	my_rooks->attacked++;
+
 	for(i = 1 ; i <= (7 - (index / 8)) ; i++){
 		//numarul de pozitii in sus pe care poate sa le urce turnul
 		position = aux ;
@@ -446,7 +468,8 @@ Piece Legal_Moves :: rooks_moves(string pos, string color, ChessBoard &chess){
 
 			if( ((position << (8*i)) & opposite_board.current_form) != 0){
 				crossed_pieces++ ;
-			}	
+				my_rooks->attacked += ROOKS;
+			} else if( ((position << (8*i)) & my_board.current_form) != 0)my_rooks->defended += ROOKS;
 		}
 		else{
 			break ;
@@ -466,8 +489,10 @@ Piece Legal_Moves :: rooks_moves(string pos, string color, ChessBoard &chess){
 			j++;
 
 			if( ((position >> (8*i)) & opposite_board.current_form) != 0){
+				my_rooks->attacked += ROOKS;
 				crossed_pieces++ ;
-			}
+			} else if( ((position >> (8*i)) & my_board.current_form) != 0)my_rooks->defended += ROOKS;
+
 		}
 		else{
 			i = 9;
@@ -489,7 +514,10 @@ Piece Legal_Moves :: rooks_moves(string pos, string color, ChessBoard &chess){
 
 			if( ((position >> i) & opposite_board.current_form) != 0){
 				crossed_pieces++;
-			}
+				my_rooks->attacked += ROOKS;
+
+			} else if( ((position >> i) & my_board.current_form) != 0)my_rooks->defended += ROOKS;
+
 		}		
 		else{
 			break;
@@ -509,7 +537,9 @@ Piece Legal_Moves :: rooks_moves(string pos, string color, ChessBoard &chess){
 
 			if( ((position << i) & opposite_board.current_form) != 0){
 				crossed_pieces++;
-			}
+				my_rooks->attacked += ROOKS;
+			} else if( ((position << i) & my_board.current_form) != 0)my_rooks->defended += ROOKS;
+
 		}
 		else{
 			break;
@@ -522,13 +552,21 @@ Piece Legal_Moves :: rooks_moves(string pos, string color, ChessBoard &chess){
 
 Piece Legal_Moves :: knight_moves(string pos, string color, ChessBoard &chess){
 	Piece knight ;
-	BitBoard  my_board ;
+	BitBoard  my_board , oponent;
+	BitBoard *my_knights;
 	if(color == "white"){
 		my_board = chess.white_board;
+		oponent = chess.black_board;
+		my_knights = &(chess.white_knights);
 	}
 	else{
 		my_board = chess.black_board;
+		oponent = chess.white_board;
+		my_knights = &(chess.black_knights);
 	}
+
+	my_knights -> attacked = 0;
+	my_knights -> defended = 0;
 
 	knight.number_of_moves = 0 ; //mutari posibile din pozitia curenta
 	unsigned long long position = pos_to_64bits(pos);
@@ -545,12 +583,16 @@ Piece Legal_Moves :: knight_moves(string pos, string color, ChessBoard &chess){
 			knight.possible_moves[j] = bits_to_position_string(position >> 15);
 			j++;
 			knight.number_of_moves++;
-		}
+			if(((position >> 15) & oponent.current_form)) my_knights->attacked += KNIGHTS;
+
+		} else if(((position >> 15) & my_board.current_form)) my_knights->defended += KNIGHTS;
+
 		if((index % 8) > 0 && (index % 8) <= 7 && (((position >> 17) & my_board.current_form) == 0) ){
 			knight.possible_moves[j] = bits_to_position_string(position >> 17);
 			j++;
 			knight.number_of_moves++;
-		}
+			if(((position >> 17) & oponent.current_form) == 0) my_knights->attacked += KNIGHTS;
+		} else if(((position >> 17) & my_board.current_form)) my_knights->defended += KNIGHTS;
 	}
 
 	//Miscari in stanga/dreapta sus vertical
@@ -560,12 +602,14 @@ Piece Legal_Moves :: knight_moves(string pos, string color, ChessBoard &chess){
 			knight.possible_moves[j] = bits_to_position_string(position << 17);
 			j++;
 			knight.number_of_moves++;
-		}
+			if(((position << 17) & oponent.current_form) == 0) my_knights->attacked += KNIGHTS;
+		} else if(((position << 17) & my_board.current_form)) my_knights->defended += KNIGHTS;
 		if((index % 8) > 0 && (index % 8) <= 7 && (((position << 15) & my_board.current_form) == 0) ){
 			knight.possible_moves[j] = bits_to_position_string(position << 15);
 			j++;
 			knight.number_of_moves++;
-		}
+			if(((position << 15) & oponent.current_form) == 0) my_knights->attacked += KNIGHTS;
+		}else if(((position << 15) & my_board.current_form)) my_knights->defended += KNIGHTS;
 	}
 
 	//Miscari stanga/dreapta jos orizontal
@@ -574,12 +618,14 @@ Piece Legal_Moves :: knight_moves(string pos, string color, ChessBoard &chess){
 			knight.possible_moves[j] = bits_to_position_string(position >> 6);
 			j++;
 			knight.number_of_moves++;
-		}
+			if(((position >> 6) & oponent.current_form) == 0) my_knights->attacked += KNIGHTS;
+		} else if(((position >> 6) & my_board.current_form)) my_knights->defended += KNIGHTS;
 		if((index % 8) > 1 && (index % 8) <= 7 && (((position >> 10) & my_board.current_form) == 0) ){
 			knight.possible_moves[j] = bits_to_position_string(position >> 10);
 			j++;
 			knight.number_of_moves++;
-		}
+			if(((position >> 10) & oponent.current_form) == 0) my_knights->attacked += KNIGHTS;
+		} else if(((position >> 10) & my_board.current_form)) my_knights->defended += KNIGHTS;
 	}
 
 	//Miscari stanga/dreapta sus orizontal
@@ -589,12 +635,14 @@ Piece Legal_Moves :: knight_moves(string pos, string color, ChessBoard &chess){
 			knight.possible_moves[j] = bits_to_position_string(position << 10);
 			j++ ;
 			knight.number_of_moves++;
-		}
+		if(((position << 10) & oponent.current_form) == 0) my_knights->attacked += KNIGHTS;
+		} else if(((position << 10) & my_board.current_form)) my_knights->defended += KNIGHTS;
 		if((index % 8) > 1 && (index % 8) <= 7 && (((position << 6) & my_board.current_form) == 0) ){
 			knight.possible_moves[j] = bits_to_position_string(position << 6);
 			j++;
 			knight.number_of_moves++;
-		}
+		if(((position << 6) & oponent.current_form) == 0) my_knights->attacked += KNIGHTS;
+		} else if(((position << 6) & my_board.current_form)) my_knights->defended += KNIGHTS;
 	}
 
 	return knight;
@@ -604,14 +652,19 @@ Piece Legal_Moves :: bishop_moves(string pos, string color, ChessBoard &chess){
 
 	Piece bishop;
 	BitBoard opposite_board, my_board ;
+	BitBoard *my_bishops;
 	if(color == "white"){
+		my_board = chess.white_board;
 		opposite_board = chess.black_board;
-		my_board = chess.white_board ;
+		my_bishops = &(chess.white_bishops);
 	}
 	else{
-		opposite_board = chess.white_board;
 		my_board = chess.black_board;
+		opposite_board = chess.white_board;
+		my_bishops = &(chess.black_bishops);
 	}
+	my_bishops-> attacked =0;
+	my_bishops -> defended = 0;
 
 	bishop.number_of_moves = 0 ; //mutari posibile din pozitia curenta
 	unsigned long long position = pos_to_64bits(pos);
@@ -622,6 +675,8 @@ Piece Legal_Moves :: bishop_moves(string pos, string color, ChessBoard &chess){
 	
 	//Diagonala dreapta sus
 	crossed_pieces = 0 ;
+	int attack = 0;
+	int defended = 0;
 	while(crossed_pieces == 0 && index_bit(position) <= 54 &&
 			(index_bit(position << 9)) <= 63 &&
 			((index_bit(position << 1)) % 8) != 0 && 
@@ -632,10 +687,14 @@ Piece Legal_Moves :: bishop_moves(string pos, string color, ChessBoard &chess){
 		j++;
 		bishop.number_of_moves++;
 		if((position & opposite_board.current_form) != 0){
-			crossed_pieces++ ;
+			crossed_pieces++;
 		}
 
 	}
+	if ((index_bit(position << 9)) <= 63 &&
+			((index_bit(position << 1)) % 8) != 0 && 
+			(((position << 9) & my_board.current_form)))defended++;
+	attack += crossed_pieces;
 
 	//Diagonala dreapta jos
 	position = aux ;
@@ -653,6 +712,11 @@ Piece Legal_Moves :: bishop_moves(string pos, string color, ChessBoard &chess){
 			crossed_pieces++ ;
 		}
 	}
+	if((index_bit(position >> 7)) >= 0 &&
+			((index_bit(position << 1) % 8) != 0) && 
+			(((position >> 7) & my_board.current_form)))defended ++;
+		attack += crossed_pieces;
+
 
 	//Diagonala stanga sus
 	position = aux ;
@@ -671,6 +735,11 @@ Piece Legal_Moves :: bishop_moves(string pos, string color, ChessBoard &chess){
 		}
 
 	}
+	if((index_bit(position << 7)) <=  63 &&
+			((index_bit(position)) % 8) != 0 && 
+			(((position << 7) & my_board.current_form) == 0)) defended ++;
+		attack += crossed_pieces;
+
 	//Diagonala stanga jos
 	position = aux ;
 	crossed_pieces = 0;
@@ -687,17 +756,268 @@ Piece Legal_Moves :: bishop_moves(string pos, string color, ChessBoard &chess){
 			crossed_pieces++ ;
 		}
 
-	}
+	} if((index_bit(position >> 9)) >=  0 &&
+			((index_bit(position)) % 8) != 0 && 
+			(((position >> 9) & my_board.current_form) == 0)) defended++;
+		attack += crossed_pieces;
+
+	my_bishops->attacked = attack * BISHOPS;
+	my_bishops->defended = defended * BISHOPS;
 
 	return bishop;
+}
+
+Piece Legal_Moves :: qb_moves(string pos, string color, ChessBoard &chess){
+
+	Piece bishop;
+	BitBoard opposite_board, my_board ;
+	BitBoard *my_bishops;
+	if(color == "white"){
+		my_board = chess.white_board;
+		opposite_board = chess.black_board;
+		my_bishops = &(chess.white_queen);
+	}
+	else{
+		my_board = chess.black_board;
+		opposite_board = chess.white_board;
+		my_bishops = &(chess.black_queen);
+	}
+
+	bishop.number_of_moves = 0 ; //mutari posibile din pozitia curenta
+	unsigned long long position = pos_to_64bits(pos);
+	unsigned long long  aux = position;
+	int crossed_pieces;
+	
+	int j = 0;
+	
+	//Diagonala dreapta sus
+	crossed_pieces = 0 ;
+	int attack = 0;
+	int defended = 0;
+	while(crossed_pieces == 0 && index_bit(position) <= 54 &&
+			(index_bit(position << 9)) <= 63 &&
+			((index_bit(position << 1)) % 8) != 0 && 
+			(((position << 9) & my_board.current_form) == 0)){
+
+		position = (position << 9) ;
+		bishop.possible_moves[j] = bits_to_position_string(position);
+		j++;
+		bishop.number_of_moves++;
+		if((position & opposite_board.current_form) != 0){
+			crossed_pieces++;
+		}
+
+	}
+	if ((index_bit(position << 9)) <= 63 &&
+			((index_bit(position << 1)) % 8) != 0 && 
+			(((position << 9) & my_board.current_form)))defended++;
+	attack += crossed_pieces;
+
+	//Diagonala dreapta jos
+	position = aux ;
+	crossed_pieces = 0;
+	while(crossed_pieces == 0 && index_bit(position) >= 8 &&
+			(index_bit(position >> 7)) >= 0 &&
+			((index_bit(position << 1) % 8) != 0) && 
+			(((position >> 7) & my_board.current_form) == 0)){
+
+		position = (position >> 7) ;
+		bishop.possible_moves[j] = bits_to_position_string(position);
+		j++;
+		bishop.number_of_moves++;
+		if((position & opposite_board.current_form) != 0){
+			crossed_pieces++ ;
+		}
+	}
+	if((index_bit(position >> 7)) >= 0 &&
+			((index_bit(position << 1) % 8) != 0) && 
+			(((position >> 7) & my_board.current_form)))defended ++;
+		attack += crossed_pieces;
+
+
+	//Diagonala stanga sus
+	position = aux ;
+	crossed_pieces = 0;
+	while(crossed_pieces == 0 && index_bit(position) <= 55 &&
+			(index_bit(position << 7)) <=  63 &&
+			((index_bit(position)) % 8) != 0 && 
+			(((position << 7) & my_board.current_form) == 0)){
+
+		position = (position << 7);
+		bishop.possible_moves[j] = bits_to_position_string(position);
+		j++;
+		bishop.number_of_moves++;
+		if((position & opposite_board.current_form) != 0){
+			crossed_pieces++ ;
+		}
+
+	}
+	if((index_bit(position << 7)) <=  63 &&
+			((index_bit(position)) % 8) != 0 && 
+			(((position << 7) & my_board.current_form) == 0)) defended ++;
+		attack += crossed_pieces;
+
+	//Diagonala stanga jos
+	position = aux ;
+	crossed_pieces = 0;
+	while(crossed_pieces == 0 && index_bit(position) >= 9 &&
+			(index_bit(position >> 9)) >=  0 &&
+			((index_bit(position)) % 8) != 0 && 
+			(((position >> 9) & my_board.current_form) == 0)){
+
+		position = position >> 9 ;
+		bishop.possible_moves[j] = bits_to_position_string(position);
+		j++;
+		bishop.number_of_moves++;
+		if((position & opposite_board.current_form) != 0){
+			crossed_pieces++ ;
+		}
+
+	} if((index_bit(position >> 9)) >=  0 &&
+			((index_bit(position)) % 8) != 0 && 
+			(((position >> 9) & my_board.current_form) == 0)) defended++;
+		attack += crossed_pieces;
+
+	my_bishops->attacked += attack * QUEENS;
+	my_bishops->defended += defended * QUEENS;
+
+	return bishop;
+}
+
+Piece Legal_Moves :: qr_moves(string pos, string color, ChessBoard &chess){
+ 
+ 	Piece rook;
+ 	BitBoard opposite_board, my_board;
+ 	BitBoard *my_rooks; 
+	if(color == "white"){
+		opposite_board = chess.black_board;
+		my_board = chess.white_board;
+		my_rooks = &(chess.white_queen);
+	}
+	else{
+		opposite_board = chess.white_board;
+		my_board = chess.black_board;
+		my_rooks = &(chess.black_queen);
+	}
+
+	my_rooks -> defended = 0;
+	my_rooks -> attacked = 0;
+
+	rook.number_of_moves = 0 ; //mutari posibile din pozitia curenta
+	unsigned long long position = pos_to_64bits(pos);
+	unsigned long long  aux = position;
+	int crossed_pieces;
+
+	int index = index_bit(position);
+	int j, i;
+
+	j = 0 ;
+	rook.number_of_moves = 0 ;
+
+	crossed_pieces = 0;
+	my_rooks->attacked++;
+
+	for(i = 1 ; i <= (7 - (index / 8)) ; i++){
+		//numarul de pozitii in sus pe care poate sa le urce turnul
+		position = aux ;
+
+		if(crossed_pieces == 0 &&
+			((position << (8*i)) & my_board.current_form) == 0){
+
+			rook.possible_moves[j] = bits_to_position_string(position << (8*i));
+			rook.number_of_moves++;
+			j++;
+
+			if( ((position << (8*i)) & opposite_board.current_form) != 0){
+				crossed_pieces++ ;
+				my_rooks->attacked += ROOKS;
+			} else if( ((position << (8*i)) & my_board.current_form) != 0)my_rooks->defended += ROOKS;
+		}
+		else{
+			break ;
+		}
+	}
+
+	crossed_pieces = 0 ;
+	for(i = 1 ; i <= (index) / 8 ; i++){
+		//Numarul de pozitii pe care poate sa le coboare turnul
+		position = aux ;
+
+		if(crossed_pieces == 0 &&
+			((position >> (8*i)) & my_board.current_form) == 0){
+
+			rook.possible_moves[j] = bits_to_position_string(position >> (8*i));
+			rook.number_of_moves++ ;
+			j++;
+
+			if( ((position >> (8*i)) & opposite_board.current_form) != 0){
+				my_rooks->attacked += ROOKS;
+				crossed_pieces++ ;
+			} else if( ((position >> (8*i)) & my_board.current_form) != 0)my_rooks->defended += ROOKS;
+
+		}
+		else{
+			i = 9;
+		}
+			
+	}
+
+	crossed_pieces = 0;
+
+	for(i = 1 ; i <= (index) % 8 ; i++){
+		//Numarul de pozitii pe care poate sa se mute la stanga
+		position = aux;
+
+		if(crossed_pieces == 0 &&
+			((position >> i) & my_board.current_form) == 0){
+			rook.possible_moves[j] = bits_to_position_string(position >> i);
+			rook.number_of_moves++;
+			j++;
+
+			if( ((position >> i) & opposite_board.current_form) != 0){
+				crossed_pieces++;
+				my_rooks->attacked += ROOKS;
+
+			} else if( ((position >> i) & my_board.current_form) != 0)my_rooks->defended += ROOKS;
+
+		}		
+		else{
+			break;
+		}	
+	}
+	crossed_pieces = 0 ;
+	for(i = 1 ; i <= (7 - (index) % 8) ; i++){
+		//Numarul de pozitii pe care poate sa se mute la dreapta
+		position = aux;
+
+		if(crossed_pieces == 0 &&
+			((position << i) & my_board.current_form) == 0){
+
+			rook.possible_moves[j] = bits_to_position_string(position << i);
+			rook.number_of_moves++;
+			j++;
+
+			if( ((position << i) & opposite_board.current_form) != 0){
+				crossed_pieces++;
+				my_rooks->attacked += ROOKS;
+			} else if( ((position << i) & my_board.current_form) != 0)my_rooks->defended += ROOKS;
+
+		}
+		else{
+			break;
+		}
+			
+	}
+
+	return rook;
 }
 
 Piece Legal_Moves :: queen_moves(string pos, string color, ChessBoard &chess){
 
 	Piece queen ;
 	Piece bishop, rook;
-	bishop = bishop_moves(pos, color, chess);
-	rook = rooks_moves(pos, color, chess);
+	rook = qr_moves(pos, color, chess);
+	bishop = qb_moves(pos, color, chess);
 	int i,j;
 
 	queen.number_of_moves = 0 ; //mutari posibile din pozitia curenta

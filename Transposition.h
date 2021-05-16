@@ -5,7 +5,7 @@
 #include "Board.h" 
 using namespace std;
 
-#define TABLESIZE (1024 * 1024 * 60)
+#define TABLESIZE (1024 * 1024)
 
 #define PAWNS 0
 #define ROOKS 1

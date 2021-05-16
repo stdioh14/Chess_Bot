@@ -82,6 +82,12 @@ class Legal_Moves
 
         Piece bishop_moves(string current_pos,string color,ChessBoard &chess);
 
+        Piece qb_moves(string current_pos,string color,ChessBoard &chess);
+
+        Piece qr_moves(string current_pos,string color,ChessBoard &chess);
+
+
+
         Piece king_moves(string pos, string color, ChessBoard &chess);
         
         Piece queen_moves(string current_pos,string color, ChessBoard &chess);

@@ -15,12 +15,12 @@ extern HashTable tt;
 #define QUEENS 4
 #define KINGS 5
 
-vector<string> get_attack_moves(ChessBoard, string);
-Moves get_possible_moves(ChessBoard &, string);
+vector<string> get_attack_moves(ChessBoard, string, int &, int &);
+Moves get_possible_moves(ChessBoard &, string, int &, int &);
 
 unsigned long long apply_move(ChessBoard &, string, string);
 vector<string> gameOver(ChessBoard, int);
-string alfabeta_root(ChessBoard, int , int);
+string alfabeta_root(ChessBoard, int, int);
 int alfabeta_negamax (ChessBoard &, int, int, int, int, bool);
 int Quiescence(ChessBoard, int, int, int);
 #endif

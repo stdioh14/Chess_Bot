@@ -7,9 +7,9 @@
 #include "Transposition.h"
 using namespace std;
 
+vector<string> get_attack_moves(ChessBoard chess, string color, int &nr_pawn_moves,
+	int &nr_rook_moves, int &nr_bishop_moves, int &nr_queen_moves) {
 
-
-vector<string> get_attack_moves(ChessBoard chess, string color) {
 	unsigned long long int position;
 	BitBoard engine_pawns, engine_rooks, engine_knights, engine_bishops;
 	BitBoard engine_queen, engine_king, my_board;
@@ -37,12 +37,19 @@ vector<string> get_attack_moves(ChessBoard chess, string color) {
 	unsigned long long int to;
 	vector<string> moves;
 
+	nr_pawn_moves = 0;
+	nr_rook_moves = 0;
+	nr_bishop_moves = 0;
+	nr_queen_moves = 0;
+
 	for (int i = 0; i < 64; i++) {
 		position = (1ULL << i);
 		if ((position & engine_pawns.current_form) != 0) {
 			source = legal.bits_to_position_string(position);
 			first_move = legal.check_first_move(color, source);
 			pawn = legal.pawn_moves(first_move, source, color, chess);
+			nr_pawn_moves += pawn.number_of_moves;
+
 			for (int i = 0; i < pawn.number_of_moves; i++) {
 				string dest = pawn.possible_moves[i];
 				move = source + dest;
@@ -53,6 +60,8 @@ vector<string> get_attack_moves(ChessBoard chess, string color) {
 		} else if ((position & engine_rooks.current_form) != 0) {
 			source = legal.bits_to_position_string(position);
 			rook = legal.rooks_moves(source, color, chess);
+			nr_rook_moves += rook.number_of_moves;
+
 			for (int i = 0; i < rook.number_of_moves; i++) {
 				string dest = rook.possible_moves[i];
 				move = source + dest;
@@ -73,6 +82,8 @@ vector<string> get_attack_moves(ChessBoard chess, string color) {
 		} else if ((position & engine_bishops.current_form) != 0) {
 			source = legal.bits_to_position_string(position);
 			bishop = legal.bishop_moves(source, color, chess);
+			nr_bishop_moves += bishop.number_of_moves;
+
 			for (int i = 0; i < bishop.number_of_moves; i++) {
 				string dest = bishop.possible_moves[i];
 				move = source + dest;
@@ -83,6 +94,8 @@ vector<string> get_attack_moves(ChessBoard chess, string color) {
 		} else if ((position & engine_queen.current_form) != 0) {
 			source = legal.bits_to_position_string(position);
 			queen = legal.queen_moves(source, color, chess);
+			nr_queen_moves += queen.number_of_moves;
+
 			for (int i = 0; i < queen.number_of_moves; i++) {
 				string dest = queen.possible_moves[i];
 				move = source + dest;
@@ -141,7 +154,9 @@ int get_move_score(string color, ChessBoard &chess, unsigned long long position)
 	return score;
 }
 
-Moves get_possible_moves(ChessBoard &chess, string color) {
+Moves get_possible_moves(ChessBoard &chess, string color, int &nr_pawn_moves,int &nr_rook_moves,
+		int &nr_bishop_moves, int &nr_queen_moves) {
+
 	unsigned long long int position;
 	BitBoard engine_pawns, engine_rooks, engine_knights, engine_bishops;
 	BitBoard engine_queen, engine_king, my_board;
@@ -151,6 +166,11 @@ Moves get_possible_moves(ChessBoard &chess, string color) {
 	Legal_Moves legal;
 	Moves moves;
 	int score;
+
+	nr_pawn_moves = 0;
+	nr_rook_moves = 0;
+	nr_bishop_moves = 0;
+	nr_queen_moves = 0;
 
 	if(color == "black") {
 		engine_pawns = chess.black_pawns;
@@ -178,6 +198,8 @@ Moves get_possible_moves(ChessBoard &chess, string color) {
 			source = legal.bits_to_position_string(position);
 			first_move = legal.check_first_move(color, source);
 			pawn = legal.pawn_moves(first_move, source, color, chess);
+			nr_pawn_moves += pawn.number_of_moves;
+
 			for (int i = 0; i < pawn.number_of_moves; i++) {
 				string dest = pawn.possible_moves[i];
 				move = source + dest;
@@ -207,6 +229,8 @@ Moves get_possible_moves(ChessBoard &chess, string color) {
 		} else if ((position & engine_rooks.current_form) != 0) {
 			source = legal.bits_to_position_string(position);
 			rook = legal.rooks_moves(source, color, chess);
+			nr_rook_moves += rook.number_of_moves;
+
 			for (int i = 0; i < rook.number_of_moves; i++) {
 				string dest = rook.possible_moves[i];
 				move = source + dest;
@@ -265,6 +289,8 @@ Moves get_possible_moves(ChessBoard &chess, string color) {
 		} else if ((position & engine_bishops.current_form) != 0) {
 			source = legal.bits_to_position_string(position);
 			bishop = legal.bishop_moves(source, color, chess);
+			nr_bishop_moves += bishop.number_of_moves;
+
 			for (int i = 0; i < bishop.number_of_moves; i++) {
 				string dest = bishop.possible_moves[i];
 				move = source + dest;
@@ -294,6 +320,8 @@ Moves get_possible_moves(ChessBoard &chess, string color) {
 		} else if ((position & engine_queen.current_form) != 0) {
 			source = legal.bits_to_position_string(position);
 			queen = legal.queen_moves(source, color, chess);
+			nr_queen_moves += queen.number_of_moves;
+
 			for (int i = 0; i < queen.number_of_moves; i++) {
 				string dest = queen.possible_moves[i];
 				move = source + dest;
@@ -382,8 +410,8 @@ unsigned long long apply_move(ChessBoard &chess, string move, string color) {
 	destination_str = move.substr(2, 2);
 	destination = legal.pos_to_64bits(destination_str);
 
-	int sbit = legal.index_bit(source) - 1;
-	int dbit = legal.index_bit(destination) - 1;
+	int sbit = legal.index_bit(source);
+	int dbit = legal.index_bit(destination);
 
 	if(color == "black" 
 		&& (source & chess.black_pawns.current_form) != 0) {
@@ -635,8 +663,11 @@ string alfabeta_root(ChessBoard chess, int player, int depth) {
 		color = "black";
 	}
 
-	Moves all_moves = get_possible_moves(chess, color);
+	int nr_pawn_moves = 0,nr_rook_moves = 0,nr_bishop_moves = 0, nr_queen_moves = 0;
 	Legal_Moves legal;
+
+	Moves all_moves = get_possible_moves(chess, color,nr_pawn_moves,
+		nr_rook_moves,nr_bishop_moves,nr_queen_moves);
 
 	int alfa = -(1<<25);
 	int beta = (1<<25);
@@ -651,11 +682,11 @@ string alfabeta_root(ChessBoard chess, int player, int depth) {
 	}
 
 	depth--;
-	/*if (moves < 15) {
+	if (moves < 15 || chess.endgame) {
 		depth++;
-	} else if (moves > 40) {
+	} else if (moves > 40 && depth >= 5) {
 		depth--;
-	}*/
+	}
 
 	unsigned long long int king;
 	ChessBoard chess_copy;
@@ -699,7 +730,7 @@ string alfabeta_root(ChessBoard chess, int player, int depth) {
 		}
 
 		score = -alfabeta_negamax(chess_copy, -player, -beta, -alfa, depth - 1, true);
-		
+
 		if(score > max_score) {
 			alfa = score;
 			max_score = score;
@@ -753,7 +784,7 @@ string alfabeta_root(ChessBoard chess, int player, int depth) {
 			max_score = score;
 			best_move = move;
 		}
-	}		
+	}
 
 	return best_move;
 }
@@ -778,13 +809,6 @@ int alfabeta_negamax (ChessBoard &chess, int player, int alfa, int beta, int dep
 		king = chess.black_king.current_form;
 	}
 
-	/*if (allowNull && !legal.is_check(color, king, chess) && !chess.endgame && (depth >= 3)) {
-		score = -alfabeta_negamax(chess, -player, -beta, -beta + 1, depth - 3, false);
-		if (score >= beta) {
-			return score;
-		}
-	}*/
-
 	unsigned long long hashBoard = chess.crt_hash;
 	if (tt.exists(hashBoard)) {
 		HashEntry tte = tt.getEntry(hashBoard);
@@ -803,7 +827,9 @@ int alfabeta_negamax (ChessBoard &chess, int player, int alfa, int beta, int dep
 		}
 	}
 
-	Moves all_moves = get_possible_moves(chess, color);
+	int nr_pawn_moves = 0,nr_rook_moves = 0,nr_bishop_moves = 0, nr_queen_moves = 0;
+	Moves all_moves = get_possible_moves(chess, color,nr_pawn_moves,
+		nr_rook_moves, nr_bishop_moves,nr_queen_moves);
 	int moves = 0;
 
 	if(all_moves.quiet.empty() && all_moves.good_captures.empty() &&
@@ -817,7 +843,8 @@ int alfabeta_negamax (ChessBoard &chess, int player, int alfa, int beta, int dep
 
 	//aceeasi evaluare daca depth e 0 returneaza evaluarea tablei
 	if (depth == 0) {
-		eval = moves + evaluateBoardScore(chess, player);
+		eval = moves + evaluateBoardScore(chess, player,nr_pawn_moves,nr_rook_moves,
+			nr_bishop_moves,nr_queen_moves);
 		//eval = moves + Quiescence(chess, player, alfa, beta);
 		if (eval <= alfa) {
 			entry.init(hashBoard, depth, eval, LOWER);
@@ -833,7 +860,6 @@ int alfabeta_negamax (ChessBoard &chess, int player, int alfa, int beta, int dep
 	}
 
 	ChessBoard chess_copy;
-
 
 	for (string move : all_moves.good_captures) {
 		chess_copy = chess;
@@ -963,7 +989,6 @@ int alfabeta_negamax (ChessBoard &chess, int player, int alfa, int beta, int dep
 	return alfa;
 }
 
-
 int Quiescence(ChessBoard chess, int player, int alfa, int beta) {
 	string color;
 	int score, current_score;
@@ -974,8 +999,11 @@ int Quiescence(ChessBoard chess, int player, int alfa, int beta) {
 		color = "black";
 	}
 
-	vector<string> attack_moves = get_attack_moves(chess, color);
-	score = evaluateBoardScore(chess, player);
+	int nr_pawn_moves = 0,nr_rook_moves = 0, nr_bishop_moves = 0, nr_queen_moves = 0;
+	vector<string> attack_moves = get_attack_moves(chess, color ,nr_pawn_moves,nr_rook_moves,
+			nr_bishop_moves,nr_queen_moves);
+	score = evaluateBoardScore(chess, player,nr_pawn_moves,nr_rook_moves,
+			nr_bishop_moves,nr_queen_moves);
 	if (attack_moves.empty()) {
 		return score;
 	}
